@@ -4,10 +4,9 @@ Main script for running Black-Scholes Model simulations and visualizations.
 
 import numpy as np
 import pandas as pd
-import time
 
 from blackscholes.models.black_scholes import BlackScholesModel
-from blackscholes.config import DEFAULT_PARAMS, MC_SIMULATION_SIZES, SIGMA_RANGE, K_RANGE
+from blackscholes.utils.config import DEFAULT_PARAMS, MC_SIMULATION_SIZES, SIGMA_RANGE, K_RANGE
 from blackscholes.visualization import plot_sensitivity
 
 def main():
