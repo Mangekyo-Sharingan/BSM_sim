@@ -5,7 +5,7 @@ Setup script for the Black-Scholes Model package.
 from setuptools import setup, find_packages
 
 setup(
-    name="blackscholes",
+    name="backend",
     version="0.1.0",
     description="A Black-Scholes Model implementation for option pricing",
     author="Group 12",
@@ -19,11 +19,11 @@ setup(
     python_requires=">=3.6",
     entry_points={
         "console_scripts": [
-            "blackscholes=main:main",
+            "backend=main:main",
         ],
     },
     package_data={
-        "blackscholes": ["*.py"],
+        "backend": ["*.py"],
     },
     classifiers=[
         "Development Status :: 3 - Alpha",

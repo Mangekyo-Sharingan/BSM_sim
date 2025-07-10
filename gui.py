@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 import sv_ttk
 
 # --- Adapted Imports for your file structure ---
-from blackscholes.models.black_scholes import BlackScholesModel
-from blackscholes.utils.config import DEFAULT_PARAMS, MC_SIMULATION_SIZES, SIGMA_RANGE, K_RANGE
+from backend.models.black_scholes import BlackScholesModel
+from backend.utils.config import DEFAULT_PARAMS, MC_SIMULATION_SIZES, SIGMA_RANGE, K_RANGE
 
 
 class BlackScholesGUI:
