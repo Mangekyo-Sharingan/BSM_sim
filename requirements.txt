@@ -1,0 +1,27 @@
+# Core data processing and numerical libraries
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.10.0
+
+# Financial data
+yfinance>=0.2.60
+
+# GUI and visualization
+matplotlib>=3.6.0
+sv-ttk>=2.6.0
+tkinterdnd2>=0.3.0
+
+# Excel file support
+openpyxl>=3.1.0
+xlrd>=2.0.0
+
+# Type hints support
+typing-extensions>=4.5.0
+
+# Optional: Testing and development
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Optional: Code formatting and linting
+black>=23.0.0
+flake8>=6.0.0
