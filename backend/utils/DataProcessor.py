@@ -9,16 +9,15 @@ class YahooFinanceDataProcessor:
         self.ticker = ticker.upper()
         self.stock = yf.Ticker(self.ticker)
 
-    def get_financial_data(self) -> Dict[str, float]:
-        """Extract key financial metrics from Yahoo Finance."""
+    def get_financial_data(self) -> Dict[str, Union[float, str]]:
         try:
-            # Get financial statements
+            #get company info
             income_stmt = self.stock.financials
             balance_sheet = self.stock.balance_sheet
             cash_flow = self.stock.cashflow
             info = self.stock.info
 
-            # Extract key metrics
+            #key metrics
             data = {
                 'shares_outstanding': info.get('sharesOutstanding', 0) / 1e6,  # Convert to millions
                 'market_cap': info.get('marketCap', 0) / 1e6,  # Convert to millions
@@ -27,38 +26,34 @@ class YahooFinanceDataProcessor:
                 'cash': self._get_latest_value(balance_sheet, 'Cash And Cash Equivalents') / 1e6,
                 'last_fcf': self._get_latest_value(cash_flow, 'Free Cash Flow') / 1e6,
                 'revenue': self._get_latest_value(income_stmt, 'Total Revenue') / 1e6,
+                'industry': info.get('industry', 'N/A'),  # Get the industry
             }
-
-            # Calculate missing enterprise value if not available
-            if data['enterprise_value'] == 0:
+            if data['enterprise_value'] == 0 and data['market_cap'] > 0:
                 data['enterprise_value'] = data['market_cap'] + data['debt'] - data['cash']
-
             return data
 
         except Exception as e:
             raise ValueError(f"Error fetching data for {self.ticker}: {str(e)}")
 
     def _get_latest_value(self, df: pd.DataFrame, key: str) -> float:
-        """Get the most recent value for a given financial metric."""
         try:
-            # Try exact match first
+            #try match first
             if key in df.index:
                 return float(df.loc[key].iloc[0])
 
-            # Try alternative naming conventions
+            #try alternative naming
             alternatives = self._get_alternative_keys(key)
             for alt_key in alternatives:
                 if alt_key in df.index:
                     return float(df.loc[alt_key].iloc[0])
 
             return 0.0
-        except:
+        except (IndexError, KeyError, TypeError):
             return 0.0
 
     def _get_alternative_keys(self, key: str) -> list:
-        """Return alternative naming conventions for financial metrics."""
         alternatives = {
-            'Total Debt': ['Total Debt', 'Long Term Debt', 'Total Liabilities'],
+            'Total Debt': ['Total Debt', 'Long Term Debt', 'Total Liabilities Net Minority Interest'],
             'Cash And Cash Equivalents': ['Cash', 'Cash And Cash Equivalents', 'Cash and Short Term Investments'],
             'Free Cash Flow': ['Free Cash Flow', 'Operating Cash Flow'],
             'Total Revenue': ['Total Revenue', 'Revenue', 'Net Sales']
@@ -68,8 +63,7 @@ class YahooFinanceDataProcessor:
 
 class FileDataProcessor:
     @staticmethod
-    def load_from_file(file_path: str) -> Dict[str, float]:
-        """Load DCF parameters from CSV or Excel file."""
+    def load_from_file(file_path: str) -> Dict[str, Union[float, str]]:
         try:
             # Determine file type and read accordingly
             if file_path.endswith('.csv'):
@@ -78,8 +72,6 @@ class FileDataProcessor:
                 df = pd.read_excel(file_path)
             else:
                 raise ValueError("Unsupported file format. Please use CSV or Excel files.")
-
-            # Expected column mapping
             required_columns = {
                 'enterprise_value': ['enterprise_value', 'Enterprise Value', 'EV'],
                 'debt': ['debt', 'total_debt', 'Total Debt', 'Debt'],
@@ -88,16 +80,20 @@ class FileDataProcessor:
                 'last_fcf': ['last_fcf', 'FCF', 'Free Cash Flow', 'fcf'],
                 'growth_rate': ['growth_rate', 'Growth Rate', 'FCF Growth'],
                 'wacc': ['wacc', 'WACC', 'discount_rate'],
-                'terminal_growth_rate': ['terminal_growth_rate', 'Terminal Growth', 'terminal_growth']
+                'terminal_growth_rate': ['terminal_growth_rate', 'Terminal Growth', 'terminal_growth'],
+                'industry': ['industry', 'Industry']
             }
 
-            # Extract data using flexible column matching
+            #Extract data
             data = {}
             for param, possible_cols in required_columns.items():
                 value = FileDataProcessor._find_value_in_df(df, possible_cols)
                 if value is not None:
-                    data[param] = value
-                else:
+                    try:
+                        data[param] = float(value)
+                    except (ValueError, TypeError):
+                        data[param] = value
+                elif param != 'industry': # Industry is optional from file
                     raise ValueError(f"Could not find column for parameter: {param}")
 
             return data
@@ -106,12 +102,12 @@ class FileDataProcessor:
             raise ValueError(f"Error loading file {file_path}: {str(e)}")
 
     @staticmethod
-    def _find_value_in_df(df: pd.DataFrame, possible_columns: list) -> Optional[float]:
+    def _find_value_in_df(df: pd.DataFrame, possible_columns: list) -> Optional[Union[float, str]]:
         """Find value in DataFrame using multiple possible column names."""
         # Check exact matches first
         for col in possible_columns:
             if col in df.columns:
-                return float(df[col].iloc[0])
+                return df[col].iloc[0]
 
         # Check case-insensitive matches
         df_cols_lower = [c.lower() for c in df.columns]
@@ -120,7 +116,7 @@ class FileDataProcessor:
             if col_lower in df_cols_lower:
                 idx = df_cols_lower.index(col_lower)
                 actual_col = df.columns[idx]
-                return float(df[actual_col].iloc[0])
+                return df[actual_col].iloc[0]
 
         return None
 
@@ -129,7 +125,7 @@ class DCFDataManager:
     def __init__(self):
         self.yahoo_processor = None
 
-    def load_from_yahoo(self, ticker: str, assumptions: Dict[str, float]) -> Dict[str, float]:
+    def load_from_yahoo(self, ticker: str, assumptions: Dict[str, float]) -> Dict[str, Union[float, str]]:
         """Load financial data from Yahoo Finance and combine with assumptions."""
         self.yahoo_processor = YahooFinanceDataProcessor(ticker)
         financial_data = self.yahoo_processor.get_financial_data()
@@ -137,7 +133,7 @@ class DCFDataManager:
         # Combine with user assumptions
         dcf_params = {**financial_data, **assumptions}
 
-        # Validate required parameters
+        # Validate required parameters (industry is not required here as it's fetched)
         required_params = ['enterprise_value', 'debt', 'cash', 'shares_outstanding',
                            'last_fcf', 'growth_rate', 'wacc', 'terminal_growth_rate']
 
@@ -147,12 +143,10 @@ class DCFDataManager:
 
         return dcf_params
 
-    def load_from_file(self, file_path: str) -> Dict[str, float]:
-        """Load all DCF parameters from file."""
+    def load_from_file(self, file_path: str) -> Dict[str, Union[float, str]]:
         return FileDataProcessor.load_from_file(file_path)
 
     def create_template_file(self, file_path: str, file_type: str = 'csv'):
-        """Create a template file for DCF parameters."""
         template_data = {
             'enterprise_value': [1000.0],
             'debt': [200.0],
@@ -161,7 +155,8 @@ class DCFDataManager:
             'last_fcf': [60.0],
             'growth_rate': [0.05],
             'wacc': [0.08],
-            'terminal_growth_rate': [0.02]
+            'terminal_growth_rate': [0.02],
+            'industry': ['Technology'] # Added industry to template
         }
 
         df = pd.DataFrame(template_data)

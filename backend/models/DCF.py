@@ -7,7 +7,7 @@ from backend.utils.DataProcessor import DCFDataManager
 
 class DiscountedCashFlowModel:
     def __init__(self, enterprise_value, debt, cash, shares_outstanding, last_fcf, growth_rate, wacc,
-                 terminal_growth_rate):
+                 terminal_growth_rate, industry='N/A'):
         self.enterprise_value = enterprise_value
         self.debt = debt
         self.cash = cash
@@ -16,6 +16,7 @@ class DiscountedCashFlowModel:
         self.growth_rate = growth_rate
         self.wacc = wacc
         self.terminal_growth_rate = terminal_growth_rate
+        self.industry = industry
 
     def calculate_equity_value(self):
         return self.enterprise_value - self.debt + self.cash
@@ -45,6 +46,19 @@ class DiscountedCashFlowModel:
         return pv_fcf + pv_terminal_value
 
     def calculate_intrinsic_value(self, years=5):
+        # ======================================================================
+        # This is where you can implement different DCF formulas.
+        # You can check the industry and call a different method.
+        #
+        # EXAMPLE:
+        # if 'financial' in self.industry.lower() or 'bank' in self.industry.lower():
+        #     return self.calculate_dividend_discount_model(years)
+        # elif 'real estate' in self.industry.lower():
+        #     return self.calculate_reit_dcf(years)
+        # else:
+        #     # Standard DCF for other industries
+        #     pass
+        # ======================================================================
         projected_fcf = self.project_free_cash_flows(years)
         if not projected_fcf:
             return 0
