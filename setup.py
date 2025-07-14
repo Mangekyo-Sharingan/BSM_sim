@@ -16,7 +16,6 @@ OPTIONS = {
     # Manually include the missing dylib file.
     # Replace the path with the one you found in Step 1.
     'frameworks': [
-        '/opt/anaconda3/envs/app_env/lib/libffi.8.dylib'
     ],
 
     'plist': {

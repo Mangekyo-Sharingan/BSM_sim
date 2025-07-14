@@ -55,22 +55,18 @@ class DiscountedCashFlowModel:
         # Avoid division by zero
         return intrinsic_equity_value / self.shares_outstanding if self.shares_outstanding else 0
 
-    # --- FIXED: Classmethods are now correctly placed inside the class ---
     @classmethod
     def from_yahoo_finance(cls, ticker: str, assumptions: Dict[str, float]):
-        """Create DCF model using Yahoo Finance data."""
         data_manager = DCFDataManager()
         params = data_manager.load_from_yahoo(ticker, assumptions)
         return cls(**params)
 
     @classmethod
     def from_file(cls, file_path: str):
-        """Create DCF model from CSV or Excel file."""
         data_manager = DCFDataManager()
         params = data_manager.load_from_file(file_path)
         return cls(**params)
 
-# The __main__ block remains for testing purposes but is not used by the GUI
+#testing purposes
 if __name__ == '__main__':
-    # ... (Your example usage code remains unchanged)
     pass

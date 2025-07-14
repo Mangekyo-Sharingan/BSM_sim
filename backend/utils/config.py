@@ -1,7 +1,3 @@
-"""
-Configuration module for Black-Scholes Model default parameters.
-"""
-
 # Default parameters for Black-Scholes Model
 DEFAULT_PARAMS = {
     'S0': 50.0,      # Initial stock price

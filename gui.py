@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 import os
 from tkinterdnd2 import DND_FILES, TkinterDnD
 import sv_ttk
-
-# --- Adapted Imports (ensure your file structure matches) ---
 from backend.models.black_scholes import BlackScholesModel
 from backend.models.DCF import DiscountedCashFlowModel
 from backend.utils.config import DEFAULT_PARAMS, MC_SIMULATION_SIZES, SIGMA_RANGE, K_RANGE
@@ -18,7 +16,7 @@ class FinanceDashboard:
     def __init__(self, master):
         self.master = master
         master.title("Fintech & Stat Model Dashboard")
-        master.geometry("1100x700")
+        master.geometry("1200x1000")
 
         self.notebook = ttk.Notebook(master)
         self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -318,8 +316,7 @@ class FinanceDashboard:
         """Calculate DCF valuation."""
         try:
             params = {name: var.get() for name, var in self.dcf_params.items()}
-            # --- THIS IS THE FIX ---
-            # The variable is named self.projection_years_var, not self.projection_years
+            # --- FIXED : Use projection_years_var instead of hardcoded 5 ---
             years = self.projection_years_var.get()
 
             dcf_model = DiscountedCashFlowModel(**params)
