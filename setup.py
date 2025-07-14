@@ -1,38 +1,40 @@
-"""
-Setup script for the Black-Scholes Model package.
-"""
+from setuptools import setup
 
-from setuptools import setup, find_packages
+# The main script that starts your application
+APP = ['gui.py']
+
+# --- Configuration for py2app ---
+OPTIONS = {
+    'iconfile': 'backend/assets/icon.icns',
+    'packages': [
+        'backend', 'numpy', 'pandas', 'scipy',
+        'yfinance', 'matplotlib', 'sv_ttk',
+        'tkinterdnd2', 'openpyxl'
+    ],
+
+    # --- ADD THIS SECTION ---
+    # Manually include the missing dylib file.
+    # Replace the path with the one you found in Step 1.
+    'frameworks': [
+        '/opt/anaconda3/envs/app_env/lib/libffi.8.dylib'
+    ],
+
+    'plist': {
+        'CFBundleName': 'Fintech Alpha',
+        'CFBundleDisplayName': 'Fintech Alpha',
+        'CFBundleGetInfoString': "Black-Scholes, Monte Carlo, and DCF Modeling",
+        'CFBundleIdentifier': "com.traslappen.bsmsim",
+        'CFBundleVersion': "1.0.0",
+        'CFBundleShortVersionString': "1.0",
+        'NSHumanReadableCopyright': 'Copyright © 2025, Traslappen, All Rights Reserved'
+    }
+}
+
+# NOTE: The monkey-patch and 'excludes' for setuptools are no longer needed
+# with modern py2app and can sometimes cause issues. This is a cleaner setup.
 
 setup(
-    name="backend",
-    version="0.1.0",
-    description="A Black-Scholes Model implementation for option pricing",
-    author="Group 12",
-    packages=find_packages(),
-    install_requires=[
-        "numpy",
-        "pandas",
-        "scipy",
-        "matplotlib",
-    ],
-    python_requires=">=3.6",
-    entry_points={
-        "console_scripts": [
-            "backend=main:main",
-        ],
-    },
-    package_data={
-        "backend": ["*.py"],
-    },
-    classifiers=[
-        "Development Status :: 3 - Alpha",
-        "Intended Audience :: Financial and Insurance Industry",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Topic :: Office/Business :: Financial :: Investment",
-    ],
+    app=APP,
+    options={'py2app': OPTIONS},
+    setup_requires=['py2app'],
 )
