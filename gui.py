@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import os
 from tkinterdnd2 import DND_FILES, TkinterDnD
 import sv_ttk
+from yfinance.domain import industry
+
 from backend.models.black_scholes import BlackScholesModel
 from backend.models.DCF import DiscountedCashFlowModel
 from backend.utils.config import DEFAULT_PARAMS, MC_SIMULATION_SIZES, SIGMA_RANGE, K_RANGE
@@ -34,6 +36,7 @@ class FinanceDashboard:
         self.create_dcf_tab(self.dcf_tab)
 
         self.dcf_data_manager = DCFDataManager()
+        self.current_ticker_industry = "N/A"
 
     def create_analytical_tab(self, parent):
         left_pane = ttk.Frame(parent, width=350)
@@ -264,6 +267,7 @@ class FinanceDashboard:
             assumptions = {'growth_rate': self.dcf_params['growth_rate'].get(), 'wacc': self.dcf_params['wacc'].get(),
                            'terminal_growth_rate': self.dcf_params['terminal_growth_rate'].get()}
             params = self.dcf_data_manager.load_from_yahoo(ticker, assumptions)
+            self.current_ticker_industry = params.get('industry', "N/A")
             for param, value in params.items():
                 if param in self.dcf_params:
                     self.dcf_params[param].set(value)
@@ -318,6 +322,8 @@ class FinanceDashboard:
             params = {name: var.get() for name, var in self.dcf_params.items()}
             # --- FIXED : Use projection_years_var instead of hardcoded 5 ---
             years = self.projection_years_var.get()
+            #store industry
+            params['industry'] = self.current_ticker_industry
 
             dcf_model = DiscountedCashFlowModel(**params)
             intrinsic_value = dcf_model.calculate_intrinsic_value(years)
@@ -337,6 +343,7 @@ class FinanceDashboard:
         self.results_text.delete(1.0, tk.END)
         results = f"""
 === DCF VALUATION RESULTS ===
+=== Industry: {dcf_model.industry} ===
 
 INPUT PARAMETERS:
 Enterprise Value:        ${dcf_model.enterprise_value:,.0f}M
